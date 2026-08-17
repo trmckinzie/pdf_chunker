@@ -1,0 +1,12 @@
+# Personal book PDFs and their generated slices — working data, not source
+*.pdf
+*_Slices/
+
+# Python
+__pycache__/
+*.pyc
+venv/
+.venv/
+
+# OS
+.DS_Store
