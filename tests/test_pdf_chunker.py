@@ -301,11 +301,12 @@ def test_generate_pdf_chunks_dry_run_writes_nothing(tmp_path):
     doc = fitz.open(str(pdf_path))
     output_dir = tmp_path / "out"
     output_dir.mkdir()
-    generated, failures = pc.generate_pdf_chunks(
+    generated, failures, skipped = pc.generate_pdf_chunks(
         doc, output_dir, [("01-Chapter.pdf", 0, 9)], dry_run=True
     )
     doc.close()
     assert failures == []
+    assert skipped == []
     assert generated == [(output_dir / "01-Chapter.pdf", 10, None)]
     assert not (output_dir / "01-Chapter.pdf").exists()
 
@@ -318,10 +319,11 @@ def test_generate_pdf_chunks_writes_correct_page_ranges(tmp_path):
     output_dir = tmp_path / "out"
     output_dir.mkdir()
     ranges = [("01-First.pdf", 0, 9), ("02-Second.pdf", 10, 19)]
-    generated, failures = pc.generate_pdf_chunks(doc, output_dir, ranges, dry_run=False)
+    generated, failures, skipped = pc.generate_pdf_chunks(doc, output_dir, ranges, dry_run=False)
     doc.close()
 
     assert failures == []
+    assert skipped == []
     assert len(generated) == 2
 
     first = fitz.open(str(output_dir / "01-First.pdf"))
@@ -333,3 +335,46 @@ def test_generate_pdf_chunks_writes_correct_page_ranges(tmp_path):
     assert second.page_count == 10
     assert second[0].get_text().strip() == "Page 11"
     second.close()
+
+
+def test_generate_pdf_chunks_does_not_overwrite_existing_file_without_force(tmp_path):
+    pdf_path = tmp_path / "book.pdf"
+    make_pdf(pdf_path, page_count=10)
+    doc = fitz.open(str(pdf_path))
+    output_dir = tmp_path / "out"
+    output_dir.mkdir()
+
+    target = output_dir / "01-Chapter.pdf"
+    target.write_bytes(b"pre-existing content, not a real pdf")
+    original_bytes = target.read_bytes()
+
+    generated, failures, skipped = pc.generate_pdf_chunks(
+        doc, output_dir, [("01-Chapter.pdf", 0, 9)], dry_run=False, force=False
+    )
+    doc.close()
+
+    assert failures == []
+    assert generated == []
+    assert skipped == [target]
+    assert target.read_bytes() == original_bytes
+
+
+def test_generate_pdf_chunks_overwrites_existing_file_with_force(tmp_path):
+    pdf_path = tmp_path / "book.pdf"
+    make_pdf(pdf_path, page_count=10)
+    doc = fitz.open(str(pdf_path))
+    output_dir = tmp_path / "out"
+    output_dir.mkdir()
+
+    target = output_dir / "01-Chapter.pdf"
+    target.write_bytes(b"pre-existing content, not a real pdf")
+
+    generated, failures, skipped = pc.generate_pdf_chunks(
+        doc, output_dir, [("01-Chapter.pdf", 0, 9)], dry_run=False, force=True
+    )
+    doc.close()
+
+    assert failures == []
+    assert skipped == []
+    assert len(generated) == 1
+    assert target.read_bytes() != b"pre-existing content, not a real pdf"

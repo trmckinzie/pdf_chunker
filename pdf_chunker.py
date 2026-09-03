@@ -311,9 +311,10 @@ def calculate_page_ranges(toc, total_pages, fallback, max_chunk):
     return ranges
 
 
-def generate_pdf_chunks(src_doc, output_dir, page_ranges, dry_run=False):
+def generate_pdf_chunks(src_doc, output_dir, page_ranges, dry_run=False, force=False):
     generated = []
     failures = []
+    skipped = []
 
     for filename, start, end in page_ranges:
         output_path = output_dir / filename
@@ -321,6 +322,10 @@ def generate_pdf_chunks(src_doc, output_dir, page_ranges, dry_run=False):
 
         if dry_run:
             generated.append((output_path, page_count, None))
+            continue
+
+        if output_path.exists() and not force:
+            skipped.append(output_path)
             continue
 
         try:
@@ -332,7 +337,7 @@ def generate_pdf_chunks(src_doc, output_dir, page_ranges, dry_run=False):
         except Exception as exc:
             failures.append((filename, str(exc)))
 
-    return generated, failures
+    return generated, failures, skipped
 
 
 def parse_args():
@@ -367,6 +372,11 @@ def parse_args():
         action="store_true",
         help="Disable heuristic chapter-heading detection; use fixed-size --fallback windows "
         "when the PDF has no embedded TOC",
+    )
+    parser.add_argument(
+        "--force",
+        action="store_true",
+        help="Overwrite output files that already exist (default: skip them with a warning)",
     )
     return parser.parse_args()
 
@@ -434,7 +444,9 @@ def main():
         source = f"{args.fallback}-page fallback windows (no usable TOC or chapter headings found)"
     print(f"{mode}Splitting '{input_path.name}' ({total_pages} pages) using {source}")
 
-    generated, failures = generate_pdf_chunks(src_doc, output_dir, page_ranges, dry_run=args.dry_run)
+    generated, failures, skipped = generate_pdf_chunks(
+        src_doc, output_dir, page_ranges, dry_run=args.dry_run, force=args.force
+    )
     src_doc.close()
 
     verb = "Would generate" if args.dry_run else "Generated"
@@ -450,6 +462,14 @@ def main():
 
     if total_size:
         print(f"\nTotal output size: {total_size / 1024:.1f} KB")
+
+    if skipped:
+        print(
+            f"\n{len(skipped)} file(s) skipped because they already exist (use --force to overwrite):",
+            file=sys.stderr,
+        )
+        for output_path in skipped:
+            print(f"  {output_path.name}", file=sys.stderr)
 
     if failures:
         print(f"\n{len(failures)} file(s) failed to write:", file=sys.stderr)
