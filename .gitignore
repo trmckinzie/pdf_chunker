@@ -15,3 +15,9 @@ venv/
 
 # Claude Code local settings (machine-specific, not for sharing)
 .claude/settings.local.json
+
+# Environment files. Had no coverage here at all before an empirical
+# gitignore audit; .env.example stays trackable as the documented template.
+.env
+.env.*
+!.env.example
