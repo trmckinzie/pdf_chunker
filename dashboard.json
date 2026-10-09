@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "commands": [
+    {
+      "name": "test",
+      "run": [".venv/bin/python", "-m", "pytest", "-q"],
+      "kind": "test",
+      "timeoutSec": 300,
+      "description": "pytest, the whole suite"
+    },
+    {
+      "name": "verify",
+      "run": ["bash", "verify.sh"],
+      "kind": "check",
+      "timeoutSec": 300,
+      "description": "ruff + pytest, what CI and pre-push run"
+    }
+  ]
+}

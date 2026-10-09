@@ -264,7 +264,8 @@ def test_find_contents_pages_stops_at_prose(tmp_path):
         0: ["Contents", "1. First Chapter", "2. Second Chapter"],
         1: [
             "First Chapter",
-            "This is a long line of ordinary prose that runs well past the short-entry length threshold used to detect contents pages.",
+            "This is a long line of ordinary prose that runs well past the short-entry "
+            "length threshold used to detect contents pages.",
         ],
     }
     make_pdf(pdf_path, page_headers=headers, page_count=2)

@@ -20,12 +20,14 @@ Any chapter longer than `--max-chunk` pages is split further into balanced sub-p
 
 ## Installation
 
-Requires Python 3.9+.
+Requires Python 3.12–3.14. Dependencies are managed with [uv](https://docs.astral.sh/uv/) and
+locked with hashes in `requirements.txt`.
 
 ```bash
 git clone https://github.com/trmckinzie/pdf_chunker.git
 cd pdf_chunker
-pip install -r requirements.txt
+uv venv --python 3.14
+uv pip install -r requirements.txt --python .venv/bin/python
 ```
 
 ## Usage
@@ -75,8 +77,17 @@ python3 pdf_chunker.py mybook.pdf --no-detect-chapters --fallback 10
 ## Development
 
 ```bash
-pip install -r requirements-dev.txt
-pytest
+uv venv --python 3.14
+uv pip install -r requirements-dev.txt --python .venv/bin/python
+bash verify.sh   # ruff + pytest, what CI and pre-push run
+```
+
+`requirements.txt` and `requirements-dev.txt` are hash-pinned lockfiles generated from
+`requirements.in` and `requirements-dev.in`. Edit the `.in` file, then recompile both:
+
+```bash
+uv pip compile requirements.in --universal --generate-hashes --python-version 3.12 -o requirements.txt
+uv pip compile requirements-dev.in --universal --generate-hashes --python-version 3.12 -o requirements-dev.txt
 ```
 
 ## License

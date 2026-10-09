@@ -244,7 +244,10 @@ def detect_toc_less_chapters(doc):
     text_toc_chapters = detect_chapters_from_text_toc(page_lines, contents_pages)
 
     if regex_chapters and text_toc_chapters:
-        return merge_chapter_lists(regex_chapters, text_toc_chapters), "combined heading and table-of-contents detection"
+        return (
+            merge_chapter_lists(regex_chapters, text_toc_chapters),
+            "combined heading and table-of-contents detection",
+        )
     if text_toc_chapters:
         return text_toc_chapters, "its printed table of contents"
     if regex_chapters:
@@ -360,7 +363,10 @@ def parse_args():
     parser.add_argument(
         "--output-dir",
         default=None,
-        help="Directory to save the output chunks (default: '<input_stem>_Slices' next to the source PDF)",
+        help=(
+            "Directory to save the output chunks "
+            "(default: '<input_stem>_Slices' next to the source PDF)"
+        ),
     )
     parser.add_argument(
         "--dry-run",
@@ -396,7 +402,10 @@ def main():
         sys.exit(1)
 
     if src_doc.needs_pass:
-        print(f"Error: '{input_path}' is password-protected and cannot be processed.", file=sys.stderr)
+        print(
+            f"Error: '{input_path}' is password-protected and cannot be processed.",
+            file=sys.stderr,
+        )
         src_doc.close()
         sys.exit(1)
 
@@ -423,15 +432,19 @@ def main():
         try:
             output_dir.mkdir(parents=True, exist_ok=True)
         except OSError as exc:
-            print(f"Error: could not create output directory '{output_dir}': {exc}", file=sys.stderr)
+            print(
+                f"Error: could not create output directory '{output_dir}': {exc}",
+                file=sys.stderr,
+            )
             src_doc.close()
             sys.exit(1)
 
         existing = list(output_dir.glob("*.pdf"))
         if existing:
             print(
-                f"Warning: '{output_dir}' already contains {len(existing)} PDF file(s) from a previous run; "
-                "stale files with names that no longer match this run will be left in place.",
+                f"Warning: '{output_dir}' already contains {len(existing)} PDF file(s) "
+                "from a previous run; stale files with names that no longer match this "
+                "run will be left in place.",
                 file=sys.stderr,
             )
 
@@ -465,7 +478,8 @@ def main():
 
     if skipped:
         print(
-            f"\n{len(skipped)} file(s) skipped because they already exist (use --force to overwrite):",
+            f"\n{len(skipped)} file(s) skipped because they already exist "
+            "(use --force to overwrite):",
             file=sys.stderr,
         )
         for output_path in skipped:
